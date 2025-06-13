@@ -27,5 +27,5 @@
 ```
     docker ps
     # find the container id
-    docker stop 
+    docker stop [CONTAINER ID HERE]
 ```
