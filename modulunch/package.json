@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "express": "^5.1.0",
+    "mongoose": "^8.15.2",
     "next": "15.3.3",
     "node": "^24.2.0",
     "react": "^19.0.0",

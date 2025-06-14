@@ -20,6 +20,8 @@
     ```
     sudo systemctl restart docker
     ```
+3. In the repo root folder, run: `docker compose up --build`
+
 
 
 ## Shutting Down Dev Server Properly:
