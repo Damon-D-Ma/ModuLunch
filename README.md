@@ -29,3 +29,10 @@
     # find the container id
     docker stop [CONTAINER ID HERE]
 ```
+
+## If your changes are not reflecting in the build and need to do a clean and rebuild:
+```
+docker compose down --volumes --remove-orphans
+docker compose build --no-cache
+docker compose up
+```
