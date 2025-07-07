@@ -1,13 +1,13 @@
 const mongoose = require('mongoose');
 
-
 const hangoutSchema = new mongoose.Schema({
+    name : {type: String, required: false, default: 'new hangout'}, // TODO: change default value???
     host: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     participants: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-    capacity: {type: Number},
+    capacity: {type: Number, required: true},
     location: {type: String, required: true},
     timeCreated: {type: Date, required: true, default: Date.now},
-    hangoutStartTime: {type: Date, required: true},
+    hangoutStartTime: {type: Date, required: true, default: Date.now},
     hangoutEndTime: {type: Date, required: true},
     description: {type: String, required: false, default: ''},
     tags: {type: [String], default: [], required: false}, // should be things like food types (e.g. "Chinese", "Italian") or other special conditions (e.g. "outdoor", "porluck", etc.)
@@ -21,8 +21,7 @@ const hangoutSchema = new mongoose.Schema({
         minutes: { type: Number, min: 0, max: 59 }
     },
     genderRestriction: { type: String, enum: ['any', 'male-only', 'female-only'], default: 'any' },
-
-
+    inviteOnly: {type: Boolean, required: true, default: false}
 });
 
 

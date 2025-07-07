@@ -1,7 +1,12 @@
 const express = require('express');
 const next = require('next');
 const mongoose = require('mongoose');
-const User = require('./models/User'); // adjust the path as needed
+
+// adjust the paths to db models as needed
+const User = require('./models/User'); 
+const Hangout = require('./models/Hangout');
+const HangoutReq = require('./models/HangoutReq');
+
 const connectDB = require('./db');
 
 const port = process.env.PORT || 3000;
@@ -34,25 +39,40 @@ const handle = app.getRequestHandler();
       try {
         const adminUser = await User.findOne({ isAdmin: true });
 
-        if (adminUser) {
-          const adminInfo = adminUser.toObject();
-          delete adminInfo.pw;
-          res.json({
-            success: true,
-            message: 'Admin user info:',
-            admin: adminInfo,
-          });
-        } else {
-          res.json({
+        if (!adminUser) {
+          return res.json({
             success: false,
             message: 'ERROR: Could not find admin user',
           });
         }
+
+        const adminInfo = adminUser.toObject();
+        delete adminInfo.pw;
+
+        const testHangout = await Hangout.findOne({
+          name: 'ADMINTESTHANGOUT',
+          host: adminUser._id,
+        }).lean(); // .lean() returns plain JS object
+
+        const testHangoutReq = await HangoutReq.findOne({
+          requestingUser: adminUser._id,
+          hangout: testHangout?._id,
+        }).lean();
+
+        res.json({
+          success: true,
+          message: 'Admin user with test data',
+          admin: adminInfo,
+          testHangout,
+          testHangoutReq,
+        });
+
       } catch (err) {
         console.error('Error in debug admin route:', err);
         res.status(500).json({ error: 'Issue with debug admin route' });
       }
     });
+
 
     // For all other requests, let Next.js handle it
     server.all(/.*/, (req, res) => {
