@@ -2,10 +2,9 @@ const express = require('express');
 const next = require('next');
 const mongoose = require('mongoose');
 
-// adjust the paths to db models as needed
-const User = require('./models/User'); 
-const Hangout = require('./models/Hangout');
-const HangoutReq = require('./models/HangoutReq');
+// IMPORT ROUTES HERE
+const apiRoutes = require('./routes/api');
+const debugRoutes = require('./routes/debug');
 
 const connectDB = require('./db');
 
@@ -24,55 +23,9 @@ const handle = app.getRequestHandler();
 
     const server = express();
 
-    server.get('/api/hello', async (req, res) => {
-      try {
-        const collections = await mongoose.connection.db.listCollections().toArray();
-        res.json({ message: 'Hello from Express inside Next.js!', collections });
-        console.log('/api/hello called, collections:', collections);
-      } catch (err) {
-        console.error('Error listing collections:', err);
-        res.status(500).json({ error: 'Failed to fetch collections' });
-      }
-    });
-
-    server.get('/api/3ddc3ee497ddc1db', async (req, res) => {
-      try {
-        const adminUser = await User.findOne({ isAdmin: true });
-
-        if (!adminUser) {
-          return res.json({
-            success: false,
-            message: 'ERROR: Could not find admin user',
-          });
-        }
-
-        const adminInfo = adminUser.toObject();
-        delete adminInfo.pw;
-
-        const testHangout = await Hangout.findOne({
-          name: 'ADMINTESTHANGOUT',
-          host: adminUser._id,
-        }).lean(); // .lean() returns plain JS object
-
-        const testHangoutReq = await HangoutReq.findOne({
-          requestingUser: adminUser._id,
-          hangout: testHangout?._id,
-        }).lean();
-
-        res.json({
-          success: true,
-          message: 'Admin user with test data',
-          admin: adminInfo,
-          testHangout,
-          testHangoutReq,
-        });
-
-      } catch (err) {
-        console.error('Error in debug admin route:', err);
-        res.status(500).json({ error: 'Issue with debug admin route' });
-      }
-    });
-
+    // ATTACH CUSTOM ROUTES HERE
+    server.use('/api', apiRoutes);
+    server.use('/debug', debugRoutes);
 
     // For all other requests, let Next.js handle it
     server.all(/.*/, (req, res) => {
