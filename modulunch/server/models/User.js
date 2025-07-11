@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-
+const bcrypt = require('bcryptjs'); // for user auth
 
 const userSchema = new mongoose.Schema({
     username: {type: String, required:true, unique: true},
@@ -16,6 +16,12 @@ const userSchema = new mongoose.Schema({
     bio: { type: String, default: '', required: false },
     pfp_url: { type:String, default: "no_pfp.png", required: false}
 });
+
+// For login authentication (model only steals pw hashes)
+userSchema.methods.comparePassword = function (candidatePassword) {
+  return bcrypt.compare(candidatePassword, this.pw);
+};
+
 
 const User = mongoose.model('User', userSchema);
 

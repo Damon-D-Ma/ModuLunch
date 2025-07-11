@@ -1,16 +1,38 @@
 const express = require('express');
 const router = express.Router();
-const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
+const User = require('../models/User');
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+
+
 
 // GET /api/hello
-router.get('/hello', async (req, res) => {
+router.post('/login', async (req, res) => {
+  const { username, pw } = req.body;
   try {
-    const collections = await mongoose.connection.db.listCollections().toArray();
-    res.json({ message: 'Hello from Express inside Next.js!', collections });
-    console.log('/api/hello called, collections:', collections);
+    // check if the user exists first
+    const user = await User.findOne({username});
+    if (!user) return res.status(401).json({ error: 'Invalid credentials, try again' });
+
+    //if the username exists, check the password (hash)
+    const correctPw  = await user.comparePassword(pw);
+    if (!correctPw) return res.status(401).json({ error: 'Invalid credentials, try again' });
+
+
+    // everything ok, sign a JWT for authentication
+    const token = jwt.sign(
+            { userId: user._id, username: user.username },
+      JWT_SECRET,
+      { expiresIn: '2h' }
+    );
+
+    res.json({ success: true, token });
+
+
+
   } catch (err) {
-    console.error('Error listing collections:', err);
-    res.status(500).json({ error: 'Failed to fetch collections' });
+    console.error('Login error:', err);
+    res.status(500).json({ error: 'Server error during login, please try again!' });
   }
 });
 

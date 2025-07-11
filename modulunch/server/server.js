@@ -22,6 +22,7 @@ const handle = app.getRequestHandler();
     await app.prepare();
 
     const server = express();
+    server.use(express.json());
 
     // ATTACH CUSTOM ROUTES HERE
     server.use('/api', apiRoutes);
