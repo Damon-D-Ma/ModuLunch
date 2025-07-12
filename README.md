@@ -31,8 +31,8 @@
 ```
 
 ## If your changes are not reflecting in the build and need to do a clean and rebuild:
-```
-docker compose down --volumes --remove-orphans
-docker compose build --no-cache
+```bash
+docker compose down --volumes --remove-orphans # NOTE: THIS WILL WIPE YOUR DB, ONLY USE IF YOU NEED TO REMOVE EVERYTHING
+docker compose build --no-cache # Use this rebuild
 docker compose up
 ```

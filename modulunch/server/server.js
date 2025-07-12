@@ -5,6 +5,8 @@ const mongoose = require('mongoose');
 // IMPORT ROUTES HERE
 const apiRoutes = require('./routes/api');
 const debugRoutes = require('./routes/debug');
+const adminRoutes = require('./routes/admin');
+
 
 const connectDB = require('./db');
 
@@ -49,6 +51,7 @@ const MongoStore = require('connect-mongo');
     // ATTACH CUSTOM ROUTES HERE
     server.use('/api', apiRoutes);
     server.use('/debug', debugRoutes);
+    server.use('/admin', adminRoutes);
 
     // For all other requests, let Next.js handle it
     server.all(/.*/, (req, res) => {

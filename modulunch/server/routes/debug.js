@@ -5,8 +5,10 @@ const User = require('../models/User');
 const Hangout = require('../models/Hangout');
 const HangoutReq = require('../models/HangoutReq');
 
+const requireAdmin = require('../middleware/requireAdmin');
+
 // GET /debug/3ddc3ee497ddc1db
-router.get('/3ddc3ee497ddc1db', async (req, res) => {
+router.get('/3ddc3ee497ddc1db', requireAdmin, async (req, res) => {
   try {
     const adminUser = await User.findOne({ isAdmin: true });
 
