@@ -1,12 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const requireLogin = require('../middleware/requireLogin');
+const requireAdmin = require('../middleware/requireAdmin');
 
 
-
-// GET /api/hello
+// /api/login
 router.post('/login', async (req, res) => {
   const { username, pw } = req.body;
   try {
@@ -18,15 +17,17 @@ router.post('/login', async (req, res) => {
     const correctPw  = await user.comparePassword(pw);
     if (!correctPw) return res.status(401).json({ error: 'Invalid credentials, try again' });
 
+    if (req.session.user) return res.status(401).json({ error: 'You are already logged in!' });
 
-    // everything ok, sign a JWT for authentication
-    const token = jwt.sign(
-            { userId: user._id, username: user.username },
-      JWT_SECRET,
-      { expiresIn: '2h' }
-    );
+    // store the user's info in the session
+    req.session.user = {
+      _id: user._id,
+      username: user.username,
+      isAdmin: user.isAdmin
+    };
 
-    res.json({ success: true, token });
+
+    res.json({ success: true, message: 'Login successful, welcome ' + user.username + '!' });
 
 
 
@@ -35,5 +36,20 @@ router.post('/login', async (req, res) => {
     res.status(500).json({ error: 'Server error during login, please try again!' });
   }
 });
+
+
+
+router.post('/logout', requireLogin, (req, res) => {
+  req.session.destroy(err => {
+    if (err) {
+      console.error('Logout error:', err);
+      return res.status(500).json({ error: 'Logout failed, please try again' });
+    }
+    res.clearCookie('connect.sid');
+    res.json({ success: true, message: 'Log out successful!' });
+  });
+});
+
+
 
 module.exports = router;

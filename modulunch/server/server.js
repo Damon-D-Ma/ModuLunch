@@ -13,6 +13,12 @@ const dev = process.env.NODE_ENV !== 'production';
 const app = next({ dev });
 const handle = app.getRequestHandler();
 
+
+// For authentication
+const session = require('express-session');
+const MongoStore = require('connect-mongo');
+
+
 (async () => {
   try {
     // Await DB connection before starting server
@@ -23,6 +29,22 @@ const handle = app.getRequestHandler();
 
     const server = express();
     server.use(express.json());
+
+    // TODO: ALLOW HTTPS LATER
+    server.use(session({
+      secret: process.env.SESSION_SECRET || 'default_dev_secret',
+      resave: false,
+      saveUninitialized: false,
+      cookie: {
+        httpOnly: true,
+        secure: !dev, // Only true in production with HTTPS
+        maxAge: 1000 * 60 * 60 * 2 // 2 hours
+      },
+      store: MongoStore.create({
+        mongoUrl: process.env.MONGODB_URI,
+        ttl: 60 * 60 * 2 // session expiration in seconds
+      })
+    }));
 
     // ATTACH CUSTOM ROUTES HERE
     server.use('/api', apiRoutes);
