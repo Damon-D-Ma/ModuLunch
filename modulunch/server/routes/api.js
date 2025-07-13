@@ -3,8 +3,7 @@ const router = express.Router();
 const User = require('../models/User');
 const requireLogin = require('../middleware/requireLogin');
 const requireAdmin = require('../middleware/requireAdmin');
-const bcrypt = require('bcryptjs'); // for user auth
-
+const utils = require('../utils/utils'); // adjust path if needed
 
 // /api/login
 router.post('/login', async (req, res) => {
@@ -86,7 +85,7 @@ router.post('/register', async (req, res) => {
       return res.status(409).json({ error: 'Email already exists, please choose another' });
     }
 
-    const pwHash = await bcrypt.hash(pw, 10);
+    const pwHash = utils.hashPw(pw);
 
     const newUser = new User({
       username,
@@ -149,7 +148,7 @@ router.post('/changepw', requireLogin, async (req, res) => {
     }
 
     // Save new password
-    const newPwHash = await bcrypt.hash(newPw, 10);
+    const newPwHash = utils.hashPw(newPw);
     user.pw = newPwHash;
     await user.save();
 
@@ -162,5 +161,229 @@ router.post('/changepw', requireLogin, async (req, res) => {
 
 });
 
+
+// /api/change-username
+router.post('/change-username', requireLogin, async (req, res) => {
+  try{
+    
+    const {
+      newUsername,
+      pw
+    } = req.body;
+
+    const { username } = req.session.user;
+
+    if (!pw){
+      return res.status(400).json({ error: 'You must enter your password to change usernames' });
+    }
+    if (!newUsername){
+      return res.status(400).json({ error: 'Missing new username.' });
+    }
+    if (username === newUsername){
+      return res.status(400).json({ error: 'Your new username cannot be your old username!' });
+    }
+
+    const user = await User.findOne({ username });
+    if (!user) return res.status(404).json({ error: 'User could not be found' });
+
+    if (! await user.comparePassword(pw)){
+      return res.status(401).json({ error: 'Current password is incorrect, please try again' });
+    }
+
+    const existing = await User.findOne({ username: newUsername });
+    if (existing) {
+      return res.status(409).json({ error: 'New username is already taken!' });
+    }
+
+    // update session token for the user
+    req.session.user.username = newUsername;
+
+    // Save new username
+    user.username = newUsername;
+    await user.save();
+
+    res.json({ success: true, message: 'Username successfully changed' });
+
+  }catch (err){
+    console.error('Email change error:', err);
+    res.status(500).json({ error: 'Server error during username change, please try again' });
+  }
+
+});
+
+
+// /api/change-email
+router.post('/change-email', requireLogin, async (req, res) => {
+  try{
+    
+    const {
+      newEmail,
+      pw
+    } = req.body;
+
+    const { username } = req.session.user;
+
+    if (!pw){
+      return res.status(400).json({ error: 'You must enter your password to change your email' });
+    }
+    if (!newEmail){
+      return res.status(400).json({ error: 'Missing new email.' });
+    }
+
+    if (!utils.validEmail(newEmail)){
+      return res.status(400).json({ error: 'Invalid email format' });
+    }
+
+
+    const user = await User.findOne({ username });
+    if (!user) return res.status(404).json({ error: 'User could not be found' });
+
+    const currEmail = user.email;
+
+    if (currEmail === newEmail){
+      return res.status(400).json({ error: 'Your new email cannot be your old email!' });
+    }
+
+    if (! await user.comparePassword(pw)){
+      return res.status(401).json({ error: 'Current password is incorrect, please try again' });
+    }
+
+    const existing = await User.findOne({ email: newEmail });
+    if (existing) {
+      return res.status(409).json({ error: 'This email is already in use!' });
+    }
+
+    // Save new email
+    user.email = newEmail;
+    await user.save();
+
+    res.json({ success: true, message: 'Email successfully changed' });
+
+  }catch (err){
+    console.error('Email change error:', err);
+    res.status(500).json({ error: 'Server error during Email change, please try again' });
+  }
+
+});
+
+// /api/delete-account
+router.post('/delete-account', requireLogin, async (req, res) => {
+  try{
+    
+    const { pw } = req.body;
+    const { username } = req.session.user;
+ 
+    if (!pw){
+      return res.status(400).json({ error: 'Password required for account deletion' });
+    }
+
+    const user = await User.findById(req.session.user._id);
+    if (!user){
+        return res.status(400).json({ error: 'You are not logged in!' });
+    }
+    if (!await user.comparePassword(pw)) {
+        return res.status(401).json({ error: 'Password incorrect.' });
+    }
+
+    if (utils.isAdmin(req.session)){
+      return res.status(401).json({ error: 'Cannot delete admin account!' });
+    }
+
+    await utils.deleteUser(user);
+
+    req.session.destroy((err) => {
+      if (err) {
+        console.error('Error destroying session:', err);
+        return res.status(500).json({ error: 'Account deleted, but session could not be destroyed. Please clear cookies manually.' });
+      }
+      res.json({ success: true, message: `User '${username}' deleted successfully.` });
+    });
+
+  }catch (err){
+    console.error('Account deletion error:', err);
+    res.status(500).json({ error: 'Server error during account deletion, please try again' });
+  }
+
+});
+
+router.post('/update-profile', requireLogin, async (req, res)=>{
+  try {
+      const {
+        gender,
+        school,
+        major,
+        year,
+        dietaryRestrictions,
+        favouriteCuisines,
+        bio,
+        pfp_url
+      } = req.body;
+
+    const user = await User.findById(req.session.user._id);
+    if (!user) return res.status(404).json({ error: 'User could not be found' });
+
+
+    // TODO: Do more input checks for this route
+    // to prevent malicious inputs  
+
+    if (gender) user.gender = gender;
+    if (school) user.school = school;
+    if (major) user.major = major;
+    if (typeof year === 'number' && Number.isInteger(year)) user.year = year;
+    if (Array.isArray(dietaryRestrictions)) user.dietaryRestrictions = dietaryRestrictions;
+    if (Array.isArray(favouriteCuisines)) user.favouriteCuisines = favouriteCuisines;
+    if (typeof bio === 'string') user.bio = bio;
+    if (pfp_url && typeof pfp_url === 'string' && pfp_url.length < 500) {
+      user.pfp_url = pfp_url;
+    };
+
+    await user.save();
+
+    res.json({ success: true, message: 'Profile successfully updated' });
+
+  
+  } catch (err){
+    console.error('Profile update error:', err);
+    res.status(500).json({ error: 'Server error during profile update, please try again' });
+  }
+});
+
+router.get('/api/fetch-profile', requireLogin, async (req, res) => {
+  try{
+    const { username } = req.query;
+    if (! username){
+      return res.status(400).json({ error: 'No username specified' });
+    }
+
+      const requestingUser = await User.findById(req.session.user._id);
+      const requestedUser = await User.findOne({ username });
+
+      if (!requestedUser) {
+        return res.status(404).json({ error: 'User could not be found.' });
+      }
+
+      if (requestedUser.isAdmin && !requestingUser.isAdmin) {
+        return res.status(403).json({ error: 'Access denied to this profile' });
+      }
+
+      const userProfile = {
+        username: requestedUser.username,
+        email: requestedUser.email,
+        gender: requestedUser.gender,
+        school: requestedUser.school,
+        major: requestedUser.major,
+        year: requestedUser.year,
+        dietaryRestrictions: requestedUser.dietaryRestrictions,
+        favouriteCuisines: requestedUser.favouriteCuisines,
+        bio: requestedUser.bio,
+        pfp_url: requestedUser.pfp_url
+      };
+
+    res.json({ success: true, profile: userProfile });
+  } catch (err){
+    console.error('Profile fetch error:', err);
+    res.status(500).json({ error: 'Server error during profile fetching' });
+  }
+});
 
 module.exports = router;
