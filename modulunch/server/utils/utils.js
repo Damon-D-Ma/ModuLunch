@@ -1,4 +1,7 @@
 const bcrypt = require('bcryptjs'); // for user auth
+const User = require('../models/User');
+const Hangout = require('../models/Hangout');
+const HangoutReq = require('../models/HangoutReq');
 
 
 function validEmail(email){
@@ -53,11 +56,38 @@ async function deleteUser(userToDelete){
 
 }
 
+// In case the hangout someone wants to join is invite-only, helper function to generate
+// a request
+async function makeHangoutRequest(userId, hangoutId){
+    if (!userId || !hangoutId) {
+        throw new Error('Missing user ID or hangout ID');
+    }
+
+    const hangout = await Hangout.findById(hangoutId);
+    if (!hangout) {
+        return { success: false, status: 404, error: 'Hangout not found' };
+    }
+
+    if (hangout.participants.includes(userId)) {
+        return { success: false, status: 400, error: 'You are already part of this hangout' };
+    }
+
+    const existingReq = await HangoutReq.findOne({ hangout: hangoutId, requestingUser: userId });
+    if (existingReq) {
+        return { success: false, status: 400, error: 'You have already made a request for this hangout' };
+    }
+    const request = new HangoutReq({ requestingUser: userId, hangout: hangoutId });
+    await request.save();
+
+    return { success: true, joined: false, message: 'Hangout request sent' };
+}
+
 
 
 module.exports = {
     validEmail,
     hashPw,
     isAdmin,
-    deleteUser
+    deleteUser,
+    makeHangoutRequest,
 };

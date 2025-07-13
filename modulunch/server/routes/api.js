@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
+const Hangout = require('../models/Hangout');
+const HangoutReq = require('../models/HangoutReq');
 const requireLogin = require('../middleware/requireLogin');
 const requireAdmin = require('../middleware/requireAdmin');
 const utils = require('../utils/utils'); // adjust path if needed
