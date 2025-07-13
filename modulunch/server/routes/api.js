@@ -306,6 +306,8 @@ router.post('/delete-account', requireLogin, async (req, res) => {
 
 });
 
+
+// /api/update-profile
 router.post('/update-profile', requireLogin, async (req, res)=>{
   try {
       const {
@@ -348,6 +350,7 @@ router.post('/update-profile', requireLogin, async (req, res)=>{
   }
 });
 
+// /api/fetch-profile
 router.get('/api/fetch-profile', requireLogin, async (req, res) => {
   try{
     const { username } = req.query;
@@ -385,5 +388,60 @@ router.get('/api/fetch-profile', requireLogin, async (req, res) => {
     res.status(500).json({ error: 'Server error during profile fetching' });
   }
 });
+
+
+// /api/new-hangout
+outer.post('/new-hangout', requireLogin, async (req, res)=>{
+  try {
+      const {
+        name = 'new hangout',
+        capacity,
+        location,
+        hangoutStartTime,
+        hangoutEndTime,
+        description = '',
+        tags = [],
+        genderRestriction = 'any',
+        inviteOnly = false
+      } = req.body;
+
+
+      if (!capacity || !location || !hangoutStartTime || !hangoutEndTime) {
+        return res.status(400).json({ error: 'Missing required fields.' });
+      }
+      
+      if (!mongoose.Types.ObjectId.isValid(req.session.user._id)) {
+        return res.status(400).json({ error: 'Invalid user ID in session.' });
+      }
+
+
+      const newHangout = new Hangout({
+        name,
+        host: req.session.user._id,
+        participants: [req.session.user._id],
+        capacity,
+        location,
+        hangoutStartTime: new Date(hangoutStartTime),
+        hangoutEndTime: new Date(hangoutEndTime),
+        description,
+        tags,
+        genderRestriction,
+        inviteOnly
+      });
+
+    await newHangout.save();
+    res.json({ success: true, message: 'New hangout created!' });
+
+  
+  } catch (err){
+    console.error('Hangout creation error:', err);
+    res.status(500).json({ error: 'Server error during hangout creation, please try again' });
+  }
+});
+
+
+
+
+
 
 module.exports = router;
