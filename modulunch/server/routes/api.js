@@ -580,5 +580,23 @@ router.post('/delete-hangout', requireLogin, async (req, res) => {
 
 });
 
+// /api/get-hangouts
+router.get('/get-hangouts', requireLogin, async (req, res) => {
+  try {
+    const userId = req.session.user._id;
+
+    const hangouts = await Hangout.find({
+      $or: [
+        { host: userId },
+        { participants: userId }
+      ]
+    }).sort({ hangoutStartTime: -1 }); // Display the newest ones first
+
+    return res.status(200).json({ success: true, hangouts });
+  } catch (err) {
+    console.error('Error fetching user\'s hangouts', err);
+    return res.status(500).json({ error: 'Server error while fetching your joined hangouts, please try again' });
+  }
+});
   
 module.exports = router;
