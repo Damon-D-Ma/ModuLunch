@@ -470,7 +470,7 @@ router.post('/join-hangout', requireLogin, async (req, res) => {
   }
 })
 
-
+// /api/answer/request
 router.post('/answer-request', requireLogin, async (req, res) => {
   try {
     const { hangoutReqId, accepted } = req.body;
@@ -510,6 +510,76 @@ router.post('/answer-request', requireLogin, async (req, res) => {
   }
 });
 
+// /api/leave-hangout
+router.post('/leave-hangout', requireLogin, async (req, res) => {
+  try {
+    const { hangoutId } = req.body;
+    const userId = req.session.user._id;
+
+    if (!hangoutId) {
+      return res.status(400).json({ error: 'Missing hangout Id' });
+    }
+
+    const hangout = await Hangout.findById(hangoutId);
+    if (!hangout) {
+      return res.status(404).json({ error: 'Hangout not found' });
+    }
+
+    if (hangout.host.toString() === userId.toString()) {
+      return res.status(403).json({ error: 'You cannot leave a hangout that you are hosting!' });
+    }
+
+    const participantIndex = hangout.participants.findIndex(p => p.toString() === userId.toString());
+    if (participantIndex === -1) {
+      return res.status(400).json({ error: 'You are not a participant of this hangout' });
+    }
+
+    hangout.participants.splice(participantIndex, 1);
+
+    await hangout.save();
+
+    // Delete any pending requests the user has for this hangout
+    await HangoutReq.deleteMany({ requestingUser: userId, hangout: hangoutId });
+
+    return res.status(200).json({ success: true, message: 'Successfully left the hangout' });
+
+  }catch (err){
+        console.error('Leave hangout error:', err);
+      res.status(500).json({ error: 'Server error during Hangout leaving procedure, please try again' });
+  }
+
+});
+
+// /api/delete-hangout
+router.post('/delete-hangout', requireLogin, async (req, res) => {
+  try {
+    const { hangoutId } = req.body;
+    const userId = req.session.user._id;
+
+    if (!hangoutId) {
+      return res.status(400).json({ error: 'Missing hangout Id' });
+    }
+
+    const hangout = await Hangout.findById(hangoutId);
+    if (!hangout) {
+      return res.status(404).json({ error: 'Hangout not found' });
+    }
+
+    if (hangout.host.toString() !== userId.toString()) {
+      return res.status(403).json({ error: 'You are not the host of this hangout!' });
+    }
+
+    await Hangout.deleteOne({ _id: hangoutId });
+
+
+    return res.status(200).json({ success: true, message: 'Hangout deletion successful' });
+
+  }catch (err){
+        console.error('Hangout deletion error:', err);
+      res.status(500).json({ error: 'Server error during Hangout deletion, please try again' });
+  }
+
+});
 
   
 module.exports = router;
