@@ -3,7 +3,7 @@ require('dotenv').config();
 const User = require('./models/User');
 const Hangout = require('./models/Hangout');
 const HangoutReq = require('./models/HangoutReq');
-
+const utils = require('./utils/utils');
 
 const bcryptjs = require('bcryptjs');      // so we can hash passwords for basic security
 
@@ -21,7 +21,7 @@ async function connectDB() {
 
   const hasAdmin  = await User.findOne({isAdmin: true});
   if (!hasAdmin){
-    const pwHash = await bcryptjs.hash('modLunchAdmin0928!', 10); // TODO: make password as an env variable instead of a hardcoded string
+    const pwHash = await utils.hashPw('modLunchAdmin0928!'); 
     const newAdmin = new User({
       username: 'admin',
       pw: pwHash,
@@ -46,6 +46,35 @@ async function connectDB() {
     }
   }else{
     console.log('INFO: Admin user account already exists');
+  }
+
+  const hasSampleUser = await User.findOne({username : 'testUser'});
+  if (!hasSampleUser){
+    const userPwHash = await utils.hashPw('samplePassword!');
+    const newUser = new User({
+      username: 'testUser',
+      pw: userPwHash,
+      email: 'user@email.com', // <-- must be a valid email string
+      isAdmin: false,
+      gender: 'other',
+      school: 'UofTears',
+      major: 'Aura Farming',
+      year: 4,
+      dietaryRestrictions: [],
+      favouriteCuisines: [],
+      bio: "IM A SAMPLE USER",  // bio is string, so this is fine
+      pfp_url: 'no_pfp.png'
+    });
+      
+    
+    try{
+      await newUser.save();
+      console.log('INFO: Test user could not be found, creating new account...');
+    }catch(e){
+      console.error('ERROR: could not create test account', e.message);
+    }
+  }else{
+    console.log('INFO: Test user account already exists');
   }
 
   // TODO: Below is sample objects for testing purposes, REMOVE BEFORE RELEASE

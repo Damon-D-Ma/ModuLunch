@@ -67,10 +67,10 @@ async function makeHangoutRequest(userId, hangoutId){
     if (!hangout) {
         return { success: false, status: 404, error: 'Hangout not found' };
     }
-
-    if (hangout.participants.includes(userId)) {
-        return { success: false, status: 400, error: 'You are already part of this hangout' };
+    if ( hangout.host.toString() === userId.toString() || hangout.participants.some(p => p.toString() === userId.toString())) {
+    return { success: false, status: 400, error: 'You are already part of this hangout!' };
     }
+
 
     const existingReq = await HangoutReq.findOne({ hangout: hangoutId, requestingUser: userId });
     if (existingReq) {
@@ -82,6 +82,47 @@ async function makeHangoutRequest(userId, hangoutId){
     return { success: true, joined: false, message: 'Hangout request sent' };
 }
 
+// DOES NOT CARE ABOUT INvItE-ONLY STATUS
+async function joinHangout(userId, hangoutId){
+    try{
+        if (!userId || !hangoutId) {
+            throw new Error('Missing user ID or hangout ID');
+        }
+
+        const user = await User.findById(userId);
+        if (!user) return { success: false, status: 404, error: 'Could not find user' };
+
+        const hangout = await Hangout.findById(hangoutId);
+        if (!hangout) return { success: false, status: 404, error: 'Could not find hangout' };
+
+        // Make sure that the user is not already in this hangout
+        if (hangout.host.toString() === userId.toString()) return { success: false, status: 400, error: 'You are already hosting this hangout!' };
+        if (hangout.participants.some(p => p.toString() === userId.toString())) {
+        return { success: false, status: 400, error: 'You are already in this hangout!' };
+        }
+
+        if (
+        hangout.genderRestriction === 'male-only' && user.gender !== 'male' ||
+        hangout.genderRestriction === 'female-only' && user.gender !== 'female'
+        ) {
+            return { success: false, status: 400, error: 'Hangout is restricted to ' + hangout.genderRestriction };
+        }
+
+        if (hangout.participants.length >= hangout.capacity) return { success: false, status: 400, error: 'Hangout is already full!'};
+        hangout.participants.push(userId);
+        
+        // enroll and delete any requests involved
+        await hangout.save();
+        await HangoutReq.deleteMany({ requestingUser: userId, hangout: hangoutId });
+        return { success: true, joined: true, message: 'Successfully joined the hangout' };
+    }catch (err){
+        console.error("Error during hangout joining procedure");
+        return { success: false, status: 500, error: 'Server error during hangout join, please try again'};
+    }
+
+}
+
+
 
 
 module.exports = {
@@ -90,4 +131,5 @@ module.exports = {
     isAdmin,
     deleteUser,
     makeHangoutRequest,
+    joinHangout
 };

@@ -393,7 +393,7 @@ router.get('/api/fetch-profile', requireLogin, async (req, res) => {
 
 
 // /api/new-hangout
-outer.post('/new-hangout', requireLogin, async (req, res)=>{
+router.post('/new-hangout', requireLogin, async (req, res)=>{
   try {
       const {
         name = 'new hangout',
@@ -442,8 +442,33 @@ outer.post('/new-hangout', requireLogin, async (req, res)=>{
 });
 
 
+// /api/join-hangout
+router.post('/join-hangout', requireLogin, async (req, res) => {
+  try{
+    const{ hangoutId } = req.body;
+    const userId = req.session.user._id;
 
+    if (!hangoutId){
+      return res.status(400).json({ error: 'Missing hangout id!' });
+    }
 
+    const hangout = await Hangout.findById(hangoutId);
+    if (!hangout) {
+    return res.status(404).json({ success: false, error: 'Hangout not found' });
+    }
+    if (hangout.inviteOnly){
+      const result = await utils.makeHangoutRequest(userId, hangoutId);
+      return res.status(result.status || 200).json(result);
+    }else {
+      const result = await utils.joinHangout(userId, hangoutId);
+      return res.status(result.status || 200).json(result);
+    }
 
+  }catch (err){
+    console.error('Hangout join error:', err);
+    res.status(500).json({ error: 'Server error during hangout joining, please try again' });
+  }
+})
 
+  
 module.exports = router;
