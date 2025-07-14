@@ -598,5 +598,48 @@ router.get('/get-hangouts', requireLogin, async (req, res) => {
     return res.status(500).json({ error: 'Server error while fetching your joined hangouts, please try again' });
   }
 });
-  
+
+
+
+// /api/search-hangouts
+router.get('/search-hangouts', requireLogin, async (req, res) => {
+  try {
+    const userId = req.session.user._id;
+    const { location, genderRestriction, inviteOnly, hangoutStartTime, tags} = req.query;
+
+    // Don't bother showing hangouts that the user is already in (or hosting)
+    const query = {
+        host: { $ne: userId },
+        participants: { $ne: userId }
+      };
+
+
+    // apply any specified filters
+    if (location) query.location = location;
+    if (genderRestriction) query.genderRestriction = genderRestriction;
+    if (typeof inviteOnly !== 'undefined') query.inviteOnly = inviteOnly === 'true';
+    if (tags) {
+      let tagArray;
+      try {
+        tagArray = Array.isArray(tags)
+          ? tags
+          : JSON.parse(tags); // allow both query strings and JSON arrays
+        if (Array.isArray(tagArray) && tagArray.length > 0) {
+          query.tags = { $in: tagArray };
+        }
+      } catch (err) {
+        return res.status(400).json({ error: 'Invalid tags format; must be JSON array or array of strings' });
+      }
+    }
+
+    const hangouts = await Hangout.find(query).sort({ hangoutStartTime: 1 });
+    return res.status(200).json({ success: true, hangouts });
+  } catch (err) {
+    console.error('Error during hangout search', err);
+    return res.status(500).json({ error: 'Server error while fetching your recommended hangouts, please try again' });
+  }
+});
+
+
+
 module.exports = router;
