@@ -470,5 +470,46 @@ router.post('/join-hangout', requireLogin, async (req, res) => {
   }
 })
 
+
+router.post('/answer-request', requireLogin, async (req, res) => {
+  try {
+    const { hangoutReqId, accepted } = req.body;
+    const userId = req.session.user._id;
+
+    if (!hangoutReqId || typeof accepted === 'undefined') {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const hangoutRequest = await HangoutReq.findById(hangoutReqId);
+    if (!hangoutRequest) {
+      return res.status(404).json({ error: 'Request not found' });
+    }
+
+    const hangoutId = hangoutRequest.hangout.toString();
+    const requestingUserId = hangoutRequest.requestingUser.toString();
+
+    const hangout = await Hangout.findById(hangoutId);
+    if (!hangout) {
+      return res.status(404).json({ error: 'Hangout not found' });
+    }
+
+    if (hangout.host.toString() !== userId.toString()) {
+      return res.status(403).json({ error: 'You are not the host of this hangout' });
+    }
+
+    if (accepted) {
+      const result = await utils.joinHangout(requestingUserId, hangoutId);
+      return res.status(result.status || 200).json(result);
+    } else {
+      await HangoutReq.deleteOne({ _id: hangoutReqId });
+      return res.status(200).json({ success: true, message: 'Request rejected' });
+    }
+  } catch (err) {
+    console.error('Hangout request management error:', err);
+    res.status(500).json({ error: 'Server error during Hangout request management, please try again' });
+  }
+});
+
+
   
 module.exports = router;
