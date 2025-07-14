@@ -568,9 +568,8 @@ router.post('/delete-hangout', requireLogin, async (req, res) => {
     if (hangout.host.toString() !== userId.toString()) {
       return res.status(403).json({ error: 'You are not the host of this hangout!' });
     }
-
+    await HangoutReq.deleteMany({ hangout: hangoutId });
     await Hangout.deleteOne({ _id: hangoutId });
-
 
     return res.status(200).json({ success: true, message: 'Hangout deletion successful' });
 
