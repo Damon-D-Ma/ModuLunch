@@ -13,11 +13,11 @@ router.post('/login', async (req, res) => {
   try {
     // check if the user exists first
     const user = await User.findOne({username});
-    if (!user) return res.status(401).json({ error: 'Invalid credentials, try again' });
+    if (!user) return res.status(401).json({ error: 'Username not found, try again' });
 
     //if the username exists, check the password (hash)
     const correctPw  = await user.comparePassword(pw);
-    if (!correctPw) return res.status(401).json({ error: 'Invalid credentials, try again' });
+    if (!correctPw) return res.status(401).json({ error: 'Incorrect password, try again' });
 
     if (req.session.user) return res.status(401).json({ error: 'You are already logged in!' });
 
