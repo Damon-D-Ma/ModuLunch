@@ -640,6 +640,13 @@ router.get('/search-hangouts', requireLogin, async (req, res) => {
   }
 });
 
-
+// /api/session
+router.get('/session', (req, res) => {
+  if (req.session.user) {
+    return res.json({ loggedIn: true, user: req.session.user });
+  } else {
+    return res.status(401).json({ loggedIn: false, error: 'Not authenticated' });
+  }
+});
 
 module.exports = router;

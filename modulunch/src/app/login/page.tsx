@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 
 import TextField from '@mui/material/TextField'
 import Button from '@mui/material/Button'
@@ -13,6 +14,22 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [showError, setShowError] = useState(false)
 
+  const router = useRouter();
+
+
+  // If user is already logged in, redirect to dashboard
+  useEffect(() => {
+    async function checkSession() {
+      const res = await fetch('/api/session', {
+        credentials: 'include',
+      });
+      if (res.ok) {
+        router.replace('/dashboard');
+      }
+    }
+    checkSession();
+  }, [router]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -20,6 +37,7 @@ export default function LoginPage() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, pw }),
+      credentials: 'include',
     })
 
     if (res.ok) {
