@@ -353,7 +353,7 @@ router.post('/update-profile', requireLogin, async (req, res)=>{
 });
 
 // /api/fetch-profile
-router.get('/api/fetch-profile', requireLogin, async (req, res) => {
+router.get('/fetch-profile', requireLogin, async (req, res) => {
   try{
     const { username } = req.query;
     if (! username){
@@ -469,6 +469,36 @@ router.post('/join-hangout', requireLogin, async (req, res) => {
     res.status(500).json({ error: 'Server error during hangout joining, please try again' });
   }
 })
+
+
+// /api/get-requests
+router.get('/get-requests', requireLogin, async(req, res) => {
+  try {
+    const userId = req.session.user._id;
+
+    // Find all hangouts currently hosted by the requesting user
+    const hostedHangouts = await Hangout.find({ host: userId }, '_id');
+    const hostedHangoutIds = hostedHangouts.map(h => h._id);
+
+    // User is not hosting anything, return empty list
+    if (hostedHangoutIds.length === 0) {
+      return res.status(200).json({ success: true, requests: [] });
+    }
+
+    // Find all hangoutRequests made to these hosted hangouts
+    const requests = await HangoutReq.find({ hangout: { $in: hostedHangoutIds } })
+      .populate('requestingUser', 'username email pfp_url') // optionally include user info
+      .populate('hangout', 'name location hangoutStartTime'); // optionally include hangout info
+
+    return res.status(200).json({ success: true, requests });
+
+  } catch (err) {
+    console.error('Error fetching hangout requests:', err);
+    return res.status(500).json({ error: 'Server error while fetching hangout requests, please try again' });
+  }
+
+});
+
 
 // /api/answer/request
 router.post('/answer-request', requireLogin, async (req, res) => {
