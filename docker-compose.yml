@@ -6,11 +6,16 @@ services:
       context: ./modulunch
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"   # map your app port
+      - "3000:3000"
+    volumes:
+      - ./modulunch:/app               # Mount your app source
+      - /app/node_modules              # Prevent container node_modules from being overwritten
+    environment:
+      - NODE_ENV=development
+      - MONGODB_URI=mongodb://mongodb:27017/modulunchdb
+    command: npm run dev              # Run the dev server instead of production build
     depends_on:
       - mongodb
-    environment:
-      - MONGODB_URI=mongodb://mongodb:27017/modulunchdb
 
   mongodb:
     image: mongo:6.0

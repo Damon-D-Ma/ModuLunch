@@ -10,14 +10,11 @@ COPY package*.json ./
 # Install dependencies
 RUN npm install
 
-# Copy all files (including server/, pages/, etc.)
+# Copy everything else
 COPY . .
 
-# Build the Next.js app
-RUN npm run build
-
-# Expose the port your server runs on (adjust if needed)
+# Expose the default dev port
 EXPOSE 3000
 
-# Start the app
-CMD ["node", "server/server.js"]
+# Default command for dev
+CMD ["npm", "run", "dev"]
