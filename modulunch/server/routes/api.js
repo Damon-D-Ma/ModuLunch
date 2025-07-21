@@ -353,7 +353,7 @@ router.post('/update-profile', requireLogin, async (req, res)=>{
 });
 
 // /api/fetch-profile
-router.get('/api/fetch-profile', requireLogin, async (req, res) => {
+router.get('/fetch-profile', requireLogin, async (req, res) => {
   try{
     const { username } = req.query;
     if (! username){
