@@ -1,6 +1,7 @@
+// src/app/layout.tsx
 import './globals.css'
 import type { Metadata } from 'next'
-import Navbar from '@/app/components/navbar' 
+import ClientLayout from './ClientLayout'
 
 export const metadata: Metadata = {
   title: 'ModuLunch',
@@ -13,9 +14,8 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="font-sans bg-gray-50 text-gray-900">
-        <Navbar />
-        <main className="p-6">{children}</main>
+      <body>
+        <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
   )

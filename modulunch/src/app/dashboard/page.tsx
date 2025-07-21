@@ -1,29 +1,41 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Container, Typography, CircularProgress, Box } from '@mui/material'
 
 export default function DashboardPage() {
   const router = useRouter()
+  const [loading, setLoading] = useState(true)
 
-  // if user is not logged in yet, redirect to login page
   useEffect(() => {
     const checkSession = async () => {
       const res = await fetch('/api/session', {
-        credentials: 'include',  // send cookies
+        credentials: 'include',
       })
       if (!res.ok) {
-        // Not logged in, redirect to login page
         router.replace('/login')
+      } else {
+        setLoading(false)
       }
     }
     checkSession()
   }, [router])
 
+  if (loading) {
+    return (
+      <Container sx={{ display: 'flex', justifyContent: 'center', mt: 8 }}>
+        <CircularProgress />
+      </Container>
+    )
+  }
+
   return (
-    <div>
-      <h1>Welcome to your dashboard!</h1>
+    <Container sx={{ mt: 4 }}>
+      <Typography variant="h4" gutterBottom>
+        Welcome to your dashboard!
+      </Typography>
       {/* Your dashboard content here */}
-    </div>
+    </Container>
   )
 }

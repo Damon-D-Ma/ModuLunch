@@ -1,8 +1,22 @@
+'use client'
+
+import { Container, Typography, Box } from '@mui/material'
+
 export default function SignupPage() {
   return (
-    <div className="p-8">
-      <h1 className="text-2xl font-semibold">Sign Up</h1>
-      {/* Add signup form here */}
-    </div>
-  );
+    <Container sx={{ py: 8, maxWidth: 'sm' }}>
+      <Typography variant="h4" fontWeight="semibold" gutterBottom>
+        Sign Up
+      </Typography>
+
+      <Box
+        sx={{
+          mt: 4,
+          // Add your form component here or build form elements below
+        }}
+      >
+        {/* TODO: Add signup form here */}
+      </Box>
+    </Container>
+  )
 }

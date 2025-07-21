@@ -2,8 +2,22 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
+import AppBar from '@mui/material/AppBar'
+import Toolbar from '@mui/material/Toolbar'
+import Typography from '@mui/material/Typography'
+import Button from '@mui/material/Button'
+import Box from '@mui/material/Box'
+import Stack from '@mui/material/Stack'
+import IconButton from '@mui/material/IconButton'
+import Brightness4Icon from '@mui/icons-material/Brightness4'
+import Brightness7Icon from '@mui/icons-material/Brightness7'
 
-export default function Navbar() {
+type NavbarProps = {
+  darkMode: boolean
+  toggleDarkMode: () => void
+}
+
+export default function Navbar({ darkMode, toggleDarkMode }: NavbarProps) {
   const [loggedIn, setLoggedIn] = useState<boolean | null>(null)
 
   useEffect(() => {
@@ -30,24 +44,51 @@ export default function Navbar() {
   if (loggedIn === null) return null // loading state
 
   return (
-    <nav className="bg-white shadow p-4 flex gap-6 items-center">
-      <Link href="/" className="font-bold text-lg text-pink-600">ModuLunch</Link>
-      <Link href="/dashboard" className="hover:text-pink-500">Dashboard</Link>
-      <Link href="/discover" className="hover:text-pink-500">Discover</Link>
-      <Link href="/schedule" className="hover:text-pink-500">Schedule</Link>
-      <Link href="/profile" className="hover:text-pink-500">Profile</Link>
+    <AppBar position="static" color="default" elevation={1}>
+      <Toolbar>
+        {/* Logo / Brand */}
+        <Link href="/" style={{ textDecoration: 'none', color: 'inherit' }}>
+          <Typography
+            variant="h6"
+            sx={{ color: 'primary.main', fontWeight: 'bold', cursor: 'pointer' }}
+          >
+            ModuLunch
+          </Typography>
+        </Link>
 
-      <div className="ml-auto">
+        {/* Navigation Links */}
+        <Box sx={{ flexGrow: 1, ml: 4 }}>
+          <Stack direction="row" spacing={3}>
+            {['dashboard', 'discover', 'schedule', 'profile'].map((page) => (
+              <Link
+                key={page}
+                href={`/${page}`}
+                style={{ textDecoration: 'none', color: 'inherit' }}
+              >
+                <Button color="primary" sx={{ textTransform: 'none', fontWeight: 'medium' }}>
+                  {page.charAt(0).toUpperCase() + page.slice(1)}
+                </Button>
+              </Link>
+            ))}
+          </Stack>
+        </Box>
+
+        {/* Dark mode toggle button */}
+        <IconButton color="inherit" onClick={toggleDarkMode} sx={{ mr: 2 }}>
+          {darkMode ? <Brightness7Icon /> : <Brightness4Icon />}
+        </IconButton>
+
+        {/* Login / Logout */}
         {loggedIn ? (
-          <button onClick={handleLogout} className="text-pink-600 hover:text-pink-800">
+          <Button color="primary" onClick={handleLogout}>
             Logout
-          </button>
+          </Button>
         ) : (
-          <Link href="/login" className="text-pink-600 hover:text-pink-800">
-            Login
+          <Link href="/login" style={{ textDecoration: 'none', color: 'inherit' }}>
+            <Button color="primary">Login</Button>
           </Link>
         )}
-      </div>
-    </nav>
+      </Toolbar>
+    </AppBar>
   )
 }

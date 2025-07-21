@@ -3,32 +3,35 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
-import TextField from '@mui/material/TextField'
-import Button from '@mui/material/Button'
+import {
+  Container,
+  Box,
+  Typography,
+  TextField,
+  Button,
+  Alert,
+  Link as MuiLink,
+} from '@mui/material'
 import Link from 'next/link'
 
-
 export default function LoginPage() {
-  const [username, setUsername] = useState('');
-  const [pw, setPw] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [username, setUsername] = useState('')
+  const [pw, setPw] = useState('')
+  const [error, setError] = useState<string | null>(null)
   const [showError, setShowError] = useState(false)
 
-  const router = useRouter();
+  const router = useRouter()
 
-
-  // If user is already logged in, redirect to dashboard
+  // Redirect if already logged in
   useEffect(() => {
     async function checkSession() {
-      const res = await fetch('/api/session', {
-        credentials: 'include',
-      });
+      const res = await fetch('/api/session', { credentials: 'include' })
       if (res.ok) {
-        router.replace('/dashboard');
+        router.replace('/dashboard')
       }
     }
-    checkSession();
-  }, [router]);
+    checkSession()
+  }, [router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -45,63 +48,82 @@ export default function LoginPage() {
     } else {
       const data = await res.json()
       setError(data.error || 'Login failed')
-      setShowError(true) // show popup error
+      setShowError(true)
     }
   }
 
-  // Hide error popup automatically after 3 seconds
   useEffect(() => {
     if (showError) {
       const timer = setTimeout(() => {
         setShowError(false)
         setError(null)
       }, 3000)
-      return () => clearTimeout(timer) // cleanup timer if component unmounts
+      return () => clearTimeout(timer)
     }
   }, [showError])
 
-
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white shadow-md rounded-xl p-8 w-full max-w-sm">
-        <h1 className="text-2xl font-semibold mb-6 text-center">Login</h1>
-        <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
-          <TextField
-            fullWidth
-            label="Username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            variant="outlined"
-          />
+    <Container
+      maxWidth="xs"
+      sx={{
+        minHeight: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        bgcolor: 'background.default',
+        py: 4,
+      }}
+    >
+      <Box
+        component="form"
+        onSubmit={handleSubmit}
+        sx={{
+          width: '100%',
+          bgcolor: 'background.paper',
+          p: 4,
+          borderRadius: 2,
+          boxShadow: 3,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 3,
+        }}
+      >
+        <Typography variant="h5" textAlign="center" fontWeight="bold">
+          Login
+        </Typography>
 
-          <TextField
-            fullWidth
-            label="Password"
-            type="password"
-            value={pw}
-            onChange={(e) => setPw(e.target.value)}
-            variant="outlined"
-          />
+        <TextField
+          label="Username"
+          variant="outlined"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          required
+          fullWidth
+        />
 
-          <Button variant="contained" color="primary" fullWidth type="submit">
-            Sign In
-          </Button>
+        <TextField
+          label="Password"
+          type="password"
+          variant="outlined"
+          value={pw}
+          onChange={(e) => setPw(e.target.value)}
+          required
+          fullWidth
+        />
 
-          {showError && error && (
-            <div className="bg-red-500 text-white px-4 py-2 rounded text-sm text-center shadow">
-              {error}
-            </div>
-          )}
-        </form>
+        <Button variant="contained" color="primary" type="submit" fullWidth>
+          Sign In
+        </Button>
 
-        <p className="mt-4 text-sm text-center text-gray-600">
-          Don&rsquo;t have an account?{' '}
-          <Link href="/register" className="text-blue-600 hover:underline">
-            Register
-          </Link>
-        </p>
-      </div>
-    </div>
-  );
+        {showError && error && <Alert severity="error">{error}</Alert>}
+
+        <Typography variant="body2" textAlign="center" color="text.secondary">
+          Don&apos;t have an account?{' '}
+          <MuiLink component={Link} href="/signup" underline="hover" color="primary">
+            Sign Up
+          </MuiLink>
+        </Typography>
+      </Box>
+    </Container>
+  )
 }

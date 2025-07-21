@@ -36,3 +36,13 @@ docker compose down --volumes --remove-orphans # NOTE: THIS WILL WIPE YOUR DB, O
 docker compose build --no-cache # Use this rebuild
 docker compose up
 ```
+
+## Accessing the MongoDB Database in the shell:
+After running the docker compose up command, you can check the MongoDB database by running:
+```bash
+mongosh MONGODB_URI # This will connect you to the MongoDB shell
+# MONGODB_URI should be replaced with your actual MongoDB URI in your `.env` file
+```
+For more information on how to use the MongoDB shell, refer to the [MongoDB Shell Documentation](https://www.mongodb.com/docs/mongodb-shell/).
+
+

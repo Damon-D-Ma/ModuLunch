@@ -1,8 +1,16 @@
-export default function HomePage() {
+'use client'
+
+import { Container, Typography, Box } from '@mui/material'
+
+export default function LogoutPage() {
   return (
-    <div className="p-8">
-      <h1 className="text-4xl font-bold mb-4">Thank you for Using ModuLunch!</h1>
-      <p className="text-lg">Logout successful</p>
-    </div>
-  );
+    <Container sx={{ py: 8, textAlign: 'center' }}>
+      <Typography variant="h3" fontWeight="bold" gutterBottom>
+        Thank you for Using ModuLunch!
+      </Typography>
+      <Typography variant="h6" color="text.secondary">
+        Logout successful!
+      </Typography>
+    </Container>
+  )
 }
