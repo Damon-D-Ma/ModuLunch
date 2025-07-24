@@ -7,6 +7,8 @@ const userSchema = new mongoose.Schema({
     email: {type: String, required:true, unique: true},
     isAdmin: {type: Boolean, default: false, required:true},
 
+    firstname: {type: String, required:true},
+    lastname: {type:String, required:true}
     gender: {type: String, required:true},
     school: {type: String, required:true},
     major: {type: String, required:true},

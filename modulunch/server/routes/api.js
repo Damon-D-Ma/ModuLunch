@@ -64,6 +64,8 @@ router.post('/register', async (req, res) => {
     const {
       username,
       pw,
+      firstName,
+      lastName,
       email,
       gender,
       school,
@@ -75,7 +77,7 @@ router.post('/register', async (req, res) => {
       pfp_url = 'no_pfp.png'
     } = req.body;
 
-    if (!username || !pw || !email || !gender || !school || !major || !year) {
+    if (!username || !pw || !email || || !firstName || !lastName || !gender || !school || !major || !year) {
       return res.status(400).json({ error: 'Missing at least one required field!' });
     }
 
@@ -93,6 +95,8 @@ router.post('/register', async (req, res) => {
       username,
       pw: pwHash,
       email,
+      firstName,
+      lastName,
       gender,
       school,
       major,
@@ -313,6 +317,8 @@ router.post('/delete-account', requireLogin, async (req, res) => {
 router.post('/update-profile', requireLogin, async (req, res)=>{
   try {
       const {
+        firstName,
+        lastName,
         gender,
         school,
         major,
@@ -329,7 +335,8 @@ router.post('/update-profile', requireLogin, async (req, res)=>{
 
     // TODO: Do more input checks for this route
     // to prevent malicious inputs  
-
+    if (firstName) user.firstName = lastName;
+    if (lastName) user.lastName = lastName;
     if (gender) user.gender = gender;
     if (school) user.school = school;
     if (major) user.major = major;
@@ -374,6 +381,8 @@ router.get('/fetch-profile', requireLogin, async (req, res) => {
       const userProfile = {
         username: requestedUser.username,
         email: requestedUser.email,
+        firstName: requestedUser.firstName,
+        lastName: requestedUser.lastName
         gender: requestedUser.gender,
         school: requestedUser.school,
         major: requestedUser.major,

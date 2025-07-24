@@ -27,6 +27,8 @@ async function connectDB() {
       pw: pwHash,
       email: 'admin@example.com', // <-- must be a valid email string
       isAdmin: true,
+      firstname: 'admin',
+      lastname: 'admin',
       gender: 'other',
       school: 'n/a',
       major: 'n/a',
@@ -55,6 +57,8 @@ async function connectDB() {
       username: 'testUser',
       pw: userPwHash,
       email: 'user@email.com', // <-- must be a valid email string
+      firstname: 'Walter',
+      lastname: 'white',
       isAdmin: false,
       gender: 'other',
       school: 'UofTears',
